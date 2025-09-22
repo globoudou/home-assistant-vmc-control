@@ -14,6 +14,7 @@ class VMCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title="VMC Control", data=user_input)
 
         schema = vol.Schema({
+            vol.Required(CONF_VMC_SWITCH, default="switch.vmc"): str,
             vol.Required(CONF_TOILET_LIGHT, default="light.toilet"): str,
             vol.Required(CONF_HUMIDITY_SENSOR, default="sensor.bathroom_humidity"): str,
             vol.Required(CONF_TEMP_INSIDE, default="sensor.temp_inside"): str,
