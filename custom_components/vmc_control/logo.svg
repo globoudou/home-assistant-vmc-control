@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="32" fill="#f4fbff"/>
+  <g transform="translate(128,128)">
+    <!-- center circle -->
+    <circle cx="0" cy="0" r="18" fill="#0b74de"/>
+    <!-- blades -->
+    <g fill="#0b74de" transform="rotate(0)">
+      <path d="M0 0 L60 -20 A8 8 0 0 1 68 -12 L28 28 Z" transform="rotate(0)"/>
+    </g>
+    <g fill="#0b74de" transform="rotate(120)">
+      <path d="M0 0 L60 -20 A8 8 0 0 1 68 -12 L28 28 Z"/>
+    </g>
+    <g fill="#0b74de" transform="rotate(240)">
+      <path d="M0 0 L60 -20 A8 8 0 0 1 68 -12 L28 28 Z"/>
+    </g>
+    <!-- smart control: small wifi arcs -->
+    <g transform="translate(70,-70)" fill="none" stroke="#0b74de" stroke-width="6" stroke-linecap="round">
+      <path d="M0 20 q20 -20 40 0" />
+      <path d="M6 8 q14 -14 28 0" stroke-opacity="0.7"/>
+      <circle cx="34" cy="34" r="6" fill="#0b74de" stroke="none" />
+    </g>
+  </g>
+</svg>

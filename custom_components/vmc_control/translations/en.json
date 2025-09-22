@@ -1,0 +1,21 @@
+{
+  "title": "VMC Control",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure VMC Control",
+        "description": "Select entities and parameters",
+        "data": {
+          "toilet_light": "Toilet light entity",
+          "humidity_sensor": "Humidity sensor",
+          "temp_inside": "Inside temperature sensor",
+          "temp_outside": "Outside temperature sensor",
+          "summer_mode": "Summer mode entity",
+          "delay_toilet": "Delay after toilet light off (min)",
+          "humidity_threshold": "Humidity threshold (%)",
+          "periodic_interval": "Periodic trigger (hours)"
+        }
+      }
+    }
+  }
+}
