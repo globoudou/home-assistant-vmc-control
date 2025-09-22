@@ -1,101 +1,93 @@
 import logging
-from datetime import timedelta
+from datetime import datetime
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from .const import DOMAIN
+from .const import *
 
 _LOGGER = logging.getLogger(__name__)
 
-AUTO_OFF_DELAY = timedelta(minutes=15)
-PERIODIC_INTERVAL = timedelta(hours=4)
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the VMC Control switch."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([VmcControlSwitch(coordinator)], True)
-
-
 class VmcControlSwitch(CoordinatorEntity, SwitchEntity):
-    """Representation of the VMC Control switch."""
-
     def __init__(self, coordinator):
         super().__init__(coordinator)
+        self.coordinator = coordinator
         self._attr_name = "VMC Control"
-        self._attr_unique_id = f"{DOMAIN}_switch"
-        # self._is_on = False
+        self._attr_unique_id = f"{DOMAIN}_switch_{id(self)}"
         self._last_trigger = None
 
     @property
     def is_on(self) -> bool:
-        # return self._is_on
-        relay_entity_id = self.coordinator.config["relay_entity"]
-        state = self.hass.states.get(relay_entity_id)
+        relay_entity_id = self.coordinator.config.get(CONF_VMC_SWITCH)
+        state = self.hass.states.get(relay_entity_id) if relay_entity_id else None
         return state.state == "on" if state else False
 
+    @property
+    def extra_state_attributes(self):
+        return {"last_trigger": self._last_trigger}
+
     async def async_turn_on(self, **kwargs):
-        """Manually turn on the VMC."""
-        # self._is_on = True
-        relay_entity_id = self.coordinator.config["relay_entity"]
-        await self.hass.services.async_call("switch", "turn_on", {"entity_id": relay_entity_id})
-        self._last_trigger = "Manuel"
-        _LOGGER.info("VMC forcée manuellement en ON")
-        # self.async_write_ha_state()
+        relay_entity_id = self.coordinator.config.get(CONF_VMC_SWITCH)
+        if relay_entity_id:
+            await self.hass.services.async_call("switch", "turn_on", {"entity_id": relay_entity_id})
+            self._last_trigger = "Manuel"
+            _LOGGER.info("VMC forcée manuellement en ON")
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Manually turn off the VMC."""
-        # self._is_on = False
-        relay_entity_id = self.coordinator.config["relay_entity"]
-        await self.hass.services.async_call("switch", "turn_off", {"entity_id": relay_entity_id})
-        self._last_trigger = "Manuel"
-        _LOGGER.info("VMC forcée manuellement en OFF")
-        # self.async_write_ha_state()
+        relay_entity_id = self.coordinator.config.get(CONF_VMC_SWITCH)
+        if relay_entity_id:
+            await self.hass.services.async_call("switch", "turn_off", {"entity_id": relay_entity_id})
+            self._last_trigger = "Manuel"
+            _LOGGER.info("VMC forcée manuellement en OFF")
+            self.async_write_ha_state()
 
     async def async_update(self):
-        """Update VMC state based on coordinator data."""
-        data = self.coordinator.data
-        if not data:
-            return
-
+        data = self.coordinator.data or {}
         reason = None
         turn_on = False
 
-        # --- Lumière toilettes ---
+        # check toilet light
         if data.get("toilet_light_recently_off"):
             turn_on = True
-            reason = f"Lumière toilettes éteinte → déclenchement après 15 min"
+            reason = "Lumière toilettes éteinte → déclenchement après délai"
 
-        # --- Humidité salle de bain ---
+        # humidity
         elif data.get("humidity") is not None and data.get("humidity_threshold") is not None:
-            if data["humidity"] > data["humidity_threshold"]:
-                turn_on = True
-                reason = f"Humidité {data['humidity']}% > seuil {data['humidity_threshold']}%"
+            try:
+                if data["humidity"] > data["humidity_threshold"]:
+                    turn_on = True
+                    reason = f"Humidité {data['humidity']}% > seuil {data['humidity_threshold']}%"
+            except Exception:
+                pass
 
-        # --- Mode été ---
-        elif data.get("summer_mode") and data.get("temp_in") and data.get("temp_out"):
-            if data["temp_in"] > data["temp_out"]:
-                turn_on = True
-                reason = f"Mode été : {data['temp_in']}°C int > {data['temp_out']}°C ext"
+        # summer mode temperature compare
+        elif data.get("summer_mode") and data.get("temp_in") is not None and data.get("temp_out") is not None:
+            try:
+                if data["temp_in"] > data["temp_out"]:
+                    turn_on = True
+                    reason = f"Mode été : {data['temp_in']}°C int > {data['temp_out']}°C ext"
+            except Exception:
+                pass
 
-        # --- Déclenchement périodique ---
+        # periodic
         elif data.get("periodic_due"):
             turn_on = True
-            reason = "Déclenchement périodique (toutes les 4h)"
+            reason = "Déclenchement périodique (toutes les Xh)"
 
-        # Appliquer l'état
-        # if turn_on and not self._is_on:
+        relay_entity_id = self.coordinator.config.get(CONF_VMC_SWITCH)
         if turn_on:
-            # self._is_on = True
-            await self.hass.services.async_call("switch", "turn_on", {"entity_id": relay_entity_id})
-            self._last_trigger = reason
-            self._last_trigger = reason
-            _LOGGER.info("VMC allumée automatiquement : %s", reason)
-            # self.async_write_ha_state()
-
-        # elif not turn_on and self._is_on and self._last_trigger != "Manuel":
-        elif not turn_on and self._last_trigger != "Manuel":
-            # self._is_on = False
-            relay_entity_id = self.coordinator.config["relay_entity"]
-            await self.hass.services.async_call("switch", "turn_off", {"entity_id": relay_entity_id})
-            _LOGGER.info("VMC éteinte automatiquement (aucune condition active)")
-            # self.async_write_ha_state()
+            # turn on actual relay
+            if relay_entity_id:
+                await self.hass.services.async_call("switch", "turn_on", {"entity_id": relay_entity_id})
+                # update coordinator last_periodic if periodic triggered
+                if data.get("periodic_due") and reason and "périodique" in reason:
+                    # update coordinator timestamp so periodic resets
+                    self.coordinator.last_periodic = datetime.utcnow()
+                self._last_trigger = reason
+                _LOGGER.info("VMC allumée automatiquement : %s", reason)
+                self.async_write_ha_state()
+        else:
+            # turn off relay if it was not manually forced
+            if self._last_trigger != "Manuel" and relay_entity_id:
+                await self.hass.services.async_call("switch", "turn_off", {"entity_id": relay_entity_id})
+                _LOGGER.info("VMC éteinte automatiquement (aucune condition active)")
+                self.async_write_ha_state()

@@ -1,6 +1,6 @@
 DOMAIN = "vmc_control"
 
-CONF_VMC_SWITCH = "switch_vmc"
+CONF_VMC_SWITCH = "vmc_switch"
 CONF_TOILET_LIGHT = "toilet_light"
 CONF_HUMIDITY_SENSOR = "humidity_sensor"
 CONF_TEMP_INSIDE = "temp_inside"
