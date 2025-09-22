@@ -1,7 +1,7 @@
 {
   "domain": "vmc_control",
   "name": "VMC Control",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "documentation": "https://github.com/globoudou/vmc_control",
   "issue_tracker": "https://github.com/globoudou/vmc_control/issues",
   "requirements": [],
