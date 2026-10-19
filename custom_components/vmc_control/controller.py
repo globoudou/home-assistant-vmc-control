@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -29,6 +29,7 @@ from .const import (
     CONF_TEMP_IN,
     CONF_TEMP_OUT,
     CONF_VMC,
+    CONF_VMC_INVERTED,
     DEFAULT_SETTINGS,
     DOMAIN,
     MODE_OFF,
@@ -106,6 +107,17 @@ class VmcController:
     def _src(self, key: str) -> str | None:
         return self.conf.get(key) or None
 
+    @property
+    def inverted(self) -> bool:
+        """Logique inversée : la VMC tourne quand l'entité est à « off »."""
+        return bool(self.conf.get(CONF_VMC_INVERTED, False))
+
+    def _running(self, state: str | None) -> bool:
+        """Traduit l'état brut de l'entité VMC en « en marche »."""
+        if state in (STATE_ON, STATE_OFF):
+            return (state == STATE_ON) != self.inverted
+        return False
+
     # --------------------------------------------------------------- lifecycle
     async def async_start(self) -> None:
         stored = await self._store.async_load() or {}
@@ -124,7 +136,7 @@ class VmcController:
         if light and (st := self.hass.states.get(light)) and st.state == STATE_ON:
             self.light_on_since = st.last_changed
         vmc = self._src(CONF_VMC)
-        if vmc and (st := self.hass.states.get(vmc)) and st.state == STATE_ON:
+        if vmc and (st := self.hass.states.get(vmc)) and self._running(st.state):
             self.vmc_on_since = st.last_changed
 
         tracked = [e for e in (self._src(k) for k in (
@@ -212,9 +224,9 @@ class VmcController:
                 self.light_on_since = None
 
         if entity_id == self._src(CONF_VMC) and new_s != old_s:
-            if new_s == STATE_ON:
+            if self._running(new_s) and not self._running(old_s):
                 self.vmc_on_since = now
-            elif old_s == STATE_ON:
+            elif self._running(old_s) and not self._running(new_s):
                 self._close_cycle(now)
                 self.vmc_on_since = None
 
@@ -333,7 +345,7 @@ class VmcController:
     def vmc_is_on(self) -> bool:
         vmc = self._src(CONF_VMC)
         st = self.hass.states.get(vmc) if vmc else None
-        return bool(st and st.state == STATE_ON)
+        return bool(st and self._running(st.state))
 
     async def async_evaluate(self) -> None:
         now = dt_util.utcnow()
@@ -380,7 +392,8 @@ class VmcController:
         if self.demand == vmc_on:
             return
         domain = vmc.split(".", 1)[0]
-        service = "turn_on" if self.demand else "turn_off"
+        # En logique inversée, « marche » = couper l'entité.
+        service = "turn_on" if self.demand != self.inverted else "turn_off"
         _LOGGER.debug("VMC %s (%s) raisons=%s", service, vmc, self.reasons)
         await self.hass.services.async_call(
             domain, service, {"entity_id": vmc}, blocking=False
@@ -415,6 +428,8 @@ class VmcController:
         return {
             "vmc_entity": self._src(CONF_VMC),
             "vmc_state": _state(CONF_VMC),
+            "vmc_running": self.vmc_is_on,
+            "vmc_inverted": self.inverted,
             "light_entity": self._src(CONF_LIGHT),
             "light_state": _state(CONF_LIGHT),
             "humidity_entity": self._src(CONF_HUMIDITY),

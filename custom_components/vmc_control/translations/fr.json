@@ -7,10 +7,14 @@
         "data": {
           "name": "Nom",
           "vmc_entity": "Entité qui commande la VMC (relais)",
+          "vmc_inverted": "Logique inversée (la VMC tourne quand l'entité est à « off »)",
           "toilet_light": "Lumière des toilettes",
           "humidity_sensor": "Capteur d'humidité de la salle de bain",
           "temp_inside": "Température intérieure",
           "temp_outside": "Température extérieure"
+        },
+        "data_description": {
+          "vmc_inverted": "À cocher si ton relais est normalement fermé : la VMC tourne quand l'entité est à « off »."
         }
       }
     },
@@ -25,10 +29,14 @@
         "description": "Seule la VMC est obligatoire. Les déclencheurs sans capteur restent inactifs. Les seuils et durées se règlent ensuite depuis les entités de l'appareil ou la carte.",
         "data": {
           "vmc_entity": "Entité qui commande la VMC (relais)",
+          "vmc_inverted": "Logique inversée (la VMC tourne quand l'entité est à « off »)",
           "toilet_light": "Lumière des toilettes",
           "humidity_sensor": "Capteur d'humidité de la salle de bain",
           "temp_inside": "Température intérieure",
           "temp_outside": "Température extérieure"
+        },
+        "data_description": {
+          "vmc_inverted": "À cocher si ton relais est normalement fermé : la VMC tourne quand l'entité est à « off »."
         }
       }
     }

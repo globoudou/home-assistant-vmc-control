@@ -167,7 +167,7 @@ async def test_config_flow(hass):
         result["flow_id"], {"name": "VMC", "vmc_entity": VMC}
     )
     assert result["type"] == "create_entry"
-    assert result["data"] == {"vmc_entity": VMC}
+    assert result["data"] == {"vmc_entity": VMC, "vmc_inverted": False}
 
 
 async def test_long_run_resets_periodic(hass, freezer):
@@ -195,3 +195,17 @@ async def test_migration_v1(hass):
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert entry.version == 2
     assert entry.data == {"vmc_entity": VMC, "toilet_light": LIGHT, "humidity_sensor": HUM}
+
+
+async def test_inverted_logic(hass):
+    await _setup(hass, vmc_inverted=True)
+    # Au repos, la VMC doit être arrêtée => entité à « on »
+    assert _on(hass)
+    hass.states.async_set(HUM, "80", {"device_class": "humidity"})
+    await hass.async_block_till_done()
+    assert not _on(hass)  # en marche => entité à « off »
+    attrs = hass.states.get("sensor.vmc_status").attributes
+    assert attrs["vmc_running"] is True and attrs["vmc_inverted"] is True
+    hass.states.async_set(HUM, "50", {"device_class": "humidity"})
+    await hass.async_block_till_done()
+    assert _on(hass)

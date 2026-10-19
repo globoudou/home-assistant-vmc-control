@@ -108,7 +108,7 @@ class VmcControlCard extends HTMLElement {
     const ent = a.entities;
     const s = a.settings || {};
     const act = a.active || {};
-    const vmcOn = a.vmc_state === "on";
+    const vmcOn = a.vmc_running !== undefined ? a.vmc_running : a.vmc_state === "on";
     const vmcKnown = a.vmc_state === "on" || a.vmc_state === "off";
     const mode = s.mode;
 

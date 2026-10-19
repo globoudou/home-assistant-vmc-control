@@ -33,6 +33,7 @@ Tout se règle depuis l'interface ; aucune automatisation ni `input_*` à créer
    *Ou* copier `custom_components/vmc_control/` dans `config/custom_components/`.
 2. Redémarrer Home Assistant.
 3. Paramètres → Appareils et services → Ajouter → **VMC Control**. Seule l'entité de la VMC est obligatoire ; les capteurs peuvent être ajoutés plus tard (⚙ *Configurer*).
+   Cochez **Logique inversée** si la VMC tourne quand l'entité est à `off` (relais normalement fermé).
 
 ## Carte
 

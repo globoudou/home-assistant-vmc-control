@@ -16,6 +16,7 @@ from .const import (
     CONF_TEMP_IN,
     CONF_TEMP_OUT,
     CONF_VMC,
+    CONF_VMC_INVERTED,
     DOMAIN,
     LIGHT_DOMAINS,
     VMC_DOMAINS,
@@ -30,6 +31,7 @@ def _sources_schema() -> dict:
         vol.Required(CONF_VMC): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=VMC_DOMAINS)
         ),
+        vol.Optional(CONF_VMC_INVERTED, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_LIGHT): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=LIGHT_DOMAINS)
         ),

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 DOMAIN = "vmc_control"
-VERSION = "2.0.1"
+VERSION = "2.1.0"
 
 # --- Entités sources (config flow / options flow) ---
 CONF_VMC = "vmc_entity"
+CONF_VMC_INVERTED = "vmc_inverted"
 CONF_LIGHT = "toilet_light"
 CONF_HUMIDITY = "humidity_sensor"
 CONF_TEMP_IN = "temp_inside"

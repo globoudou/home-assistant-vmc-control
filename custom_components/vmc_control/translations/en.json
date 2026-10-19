@@ -7,10 +7,14 @@
         "data": {
           "name": "Name",
           "vmc_entity": "Entity driving the fan (relay)",
+          "vmc_inverted": "Inverted logic (fan runs when the entity is off)",
           "toilet_light": "Toilet light",
           "humidity_sensor": "Bathroom humidity sensor",
           "temp_inside": "Inside temperature",
           "temp_outside": "Outside temperature"
+        },
+        "data_description": {
+          "vmc_inverted": "Use if your relay is normally closed: the fan is running when the entity is « off »."
         }
       }
     },
@@ -25,10 +29,14 @@
         "description": "Only the fan entity is required. Triggers without a sensor stay inactive. Thresholds and durations are then set from the device entities or the card.",
         "data": {
           "vmc_entity": "Entity driving the fan (relay)",
+          "vmc_inverted": "Inverted logic (fan runs when the entity is off)",
           "toilet_light": "Toilet light",
           "humidity_sensor": "Bathroom humidity sensor",
           "temp_inside": "Inside temperature",
           "temp_outside": "Outside temperature"
+        },
+        "data_description": {
+          "vmc_inverted": "Use if your relay is normally closed: the fan is running when the entity is « off »."
         }
       }
     }
