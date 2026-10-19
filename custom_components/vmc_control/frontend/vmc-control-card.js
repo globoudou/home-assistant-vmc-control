@@ -280,11 +280,35 @@ const STYLE = `
     color: var(--primary-text-color); }
 `;
 
-if (!customElements.get("vmc-control-card")) {
-  customElements.define("vmc-control-card", VmcControlCard);
-  window.customCards = window.customCards || [];
+const CARD_TAG = "vmc-control-card";
+
+// Le frontend de Home Assistant peut remplacer window.customElements après le
+// chargement de ce script (registre « scoped »). Une carte définie trop tôt
+// reste alors invisible : le sélecteur de cartes attend indéfiniment.
+// On (re)définit donc la carte dans le registre actif tant que nécessaire.
+function defineCard() {
+  const registry = window.customElements;
+  if (registry.get(CARD_TAG)) return true;
+  try {
+    // Une sous-classe neuve évite l'erreur « constructor already used ».
+    registry.define(CARD_TAG, class extends VmcControlCard {});
+  } catch (err) {
+    console.warn("vmc-control-card:", err);
+  }
+  return !!registry.get(CARD_TAG);
+}
+
+defineCard();
+let tries = 0;
+const watcher = setInterval(() => {
+  defineCard();
+  if (++tries >= 60) clearInterval(watcher); // surveille 30 s
+}, 500);
+
+window.customCards = window.customCards || [];
+if (!window.customCards.some((c) => c.type === CARD_TAG)) {
   window.customCards.push({
-    type: "vmc-control-card",
+    type: CARD_TAG,
     name: "VMC Control",
     description: "Contrôle et paramétrage de la VMC (mode, boost, déclencheurs, seuils).",
     preview: true,
