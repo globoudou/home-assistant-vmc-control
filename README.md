@@ -1,3 +1,5 @@
+<img src="assets/icon.svg" width="96" align="right">
+
 # VMC Control 🌀
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
