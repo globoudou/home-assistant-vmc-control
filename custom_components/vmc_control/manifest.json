@@ -5,9 +5,9 @@
   "config_flow": true,
   "dependencies": ["frontend", "http"],
   "documentation": "https://github.com/globoudou/home-assistant-vmc-control",
-  "integration_type": "helper",
+  "integration_type": "device",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/globoudou/home-assistant-vmc-control/issues",
   "requirements": [],
-  "version": "2.0.0"
+  "version": "2.0.1"
 }
