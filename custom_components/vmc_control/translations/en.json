@@ -1,20 +1,125 @@
 {
-  "title": "VMC Control",
   "config": {
     "step": {
       "user": {
-        "title": "Configure VMC Control",
-        "description": "Select entities and parameters",
+        "title": "VMC Control",
+        "description": "Only the fan entity is required. Triggers without a sensor stay inactive. Thresholds and durations are then set from the device entities or the card.",
         "data": {
-          "toilet_light": "Toilet light entity",
-          "humidity_sensor": "Humidity sensor",
-          "temp_inside": "Inside temperature sensor",
-          "temp_outside": "Outside temperature sensor",
-          "summer_mode": "Summer mode entity",
-          "delay_toilet": "Delay after toilet light off (min)",
-          "humidity_threshold": "Humidity threshold (%)",
-          "periodic_interval": "Periodic trigger (hours)"
+          "name": "Name",
+          "vmc_entity": "Entity driving the fan (relay)",
+          "toilet_light": "Toilet light",
+          "humidity_sensor": "Bathroom humidity sensor",
+          "temp_inside": "Inside temperature",
+          "temp_outside": "Outside temperature"
         }
+      }
+    },
+    "abort": {
+      "already_configured": "This fan is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Source entities",
+        "description": "Only the fan entity is required. Triggers without a sensor stay inactive. Thresholds and durations are then set from the device entities or the card.",
+        "data": {
+          "vmc_entity": "Entity driving the fan (relay)",
+          "toilet_light": "Toilet light",
+          "humidity_sensor": "Bathroom humidity sensor",
+          "temp_inside": "Inside temperature",
+          "temp_outside": "Outside temperature"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "on": "Forced on",
+          "off": "Forced off"
+        }
+      },
+      "thermal_mode": {
+        "name": "Thermal mode",
+        "state": {
+          "off": "Disabled",
+          "cool": "Cool",
+          "heat": "Heat"
+        }
+      }
+    },
+    "switch": {
+      "toilet_enabled": {
+        "name": "Toilet trigger"
+      },
+      "humidity_enabled": {
+        "name": "Humidity trigger"
+      },
+      "periodic_enabled": {
+        "name": "Periodic airing"
+      }
+    },
+    "number": {
+      "toilet_delay_on": {
+        "name": "Toilet: start delay"
+      },
+      "toilet_run_after": {
+        "name": "Toilet: run after light off"
+      },
+      "humidity_on": {
+        "name": "Humidity: start threshold"
+      },
+      "humidity_hysteresis": {
+        "name": "Humidity: hysteresis"
+      },
+      "periodic_interval": {
+        "name": "Periodic: interval"
+      },
+      "periodic_duration": {
+        "name": "Periodic: duration"
+      },
+      "thermal_target": {
+        "name": "Thermal: indoor target"
+      },
+      "thermal_delta": {
+        "name": "Thermal: minimum in/out gap"
+      },
+      "boost_duration": {
+        "name": "Boost duration"
+      }
+    },
+    "button": {
+      "boost": {
+        "name": "Boost"
+      },
+      "stop_boost": {
+        "name": "Stop boost"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Idle",
+          "forced": "Forced on",
+          "boost": "Boost",
+          "toilet": "Toilet",
+          "humidity": "Humidity",
+          "thermal": "Temperature differential",
+          "periodic": "Periodic airing"
+        }
+      },
+      "next_cycle": {
+        "name": "Next airing"
+      }
+    },
+    "binary_sensor": {
+      "demand": {
+        "name": "Ventilation requested"
       }
     }
   }

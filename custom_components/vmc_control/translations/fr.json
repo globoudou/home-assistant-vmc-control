@@ -1,0 +1,126 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "VMC Control",
+        "description": "Seule la VMC est obligatoire. Les déclencheurs sans capteur restent inactifs. Les seuils et durées se règlent ensuite depuis les entités de l'appareil ou la carte.",
+        "data": {
+          "name": "Nom",
+          "vmc_entity": "Entité qui commande la VMC (relais)",
+          "toilet_light": "Lumière des toilettes",
+          "humidity_sensor": "Capteur d'humidité de la salle de bain",
+          "temp_inside": "Température intérieure",
+          "temp_outside": "Température extérieure"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Cette VMC est déjà configurée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Entités sources",
+        "description": "Seule la VMC est obligatoire. Les déclencheurs sans capteur restent inactifs. Les seuils et durées se règlent ensuite depuis les entités de l'appareil ou la carte.",
+        "data": {
+          "vmc_entity": "Entité qui commande la VMC (relais)",
+          "toilet_light": "Lumière des toilettes",
+          "humidity_sensor": "Capteur d'humidité de la salle de bain",
+          "temp_inside": "Température intérieure",
+          "temp_outside": "Température extérieure"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "on": "Marche forcée",
+          "off": "Arrêt forcé"
+        }
+      },
+      "thermal_mode": {
+        "name": "Mode thermique",
+        "state": {
+          "off": "Désactivé",
+          "cool": "Rafraîchir",
+          "heat": "Réchauffer"
+        }
+      }
+    },
+    "switch": {
+      "toilet_enabled": {
+        "name": "Déclencheur toilettes"
+      },
+      "humidity_enabled": {
+        "name": "Déclencheur humidité"
+      },
+      "periodic_enabled": {
+        "name": "Renouvellement périodique"
+      }
+    },
+    "number": {
+      "toilet_delay_on": {
+        "name": "Toilettes : délai avant démarrage"
+      },
+      "toilet_run_after": {
+        "name": "Toilettes : marche après extinction"
+      },
+      "humidity_on": {
+        "name": "Humidité : seuil de démarrage"
+      },
+      "humidity_hysteresis": {
+        "name": "Humidité : hystérésis"
+      },
+      "periodic_interval": {
+        "name": "Périodique : intervalle"
+      },
+      "periodic_duration": {
+        "name": "Périodique : durée"
+      },
+      "thermal_target": {
+        "name": "Thermique : consigne intérieure"
+      },
+      "thermal_delta": {
+        "name": "Thermique : écart minimal int/ext"
+      },
+      "boost_duration": {
+        "name": "Durée du boost"
+      }
+    },
+    "button": {
+      "boost": {
+        "name": "Boost"
+      },
+      "stop_boost": {
+        "name": "Arrêter le boost"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "État",
+        "state": {
+          "idle": "Arrêt",
+          "forced": "Marche forcée",
+          "boost": "Boost",
+          "toilet": "Toilettes",
+          "humidity": "Humidité",
+          "thermal": "Différentiel de température",
+          "periodic": "Renouvellement périodique"
+        }
+      },
+      "next_cycle": {
+        "name": "Prochain renouvellement"
+      }
+    },
+    "binary_sensor": {
+      "demand": {
+        "name": "Ventilation demandée"
+      }
+    }
+  }
+}
