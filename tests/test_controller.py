@@ -3,13 +3,12 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
 )
-
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from custom_components.vmc_control.const import DOMAIN
 
@@ -209,3 +208,26 @@ async def test_inverted_logic(hass):
     hass.states.async_set(HUM, "50", {"device_class": "humidity"})
     await hass.async_block_till_done()
     assert _on(hass)
+
+
+async def test_card_served_and_resource(hass, hass_client):
+    """La carte est copiée dans www, servie et ajoutée aux ressources."""
+    from pathlib import Path
+
+    from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
+    from homeassistant.components.lovelace.const import LOVELACE_DATA
+
+    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, "vmc_control", {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    urls = hass.data[DATA_EXTRA_MODULE_URL].urls
+    url = next(u for u in urls if "vmc-control-card.js" in u)
+    assert url.endswith("?v=2.2.0")
+    assert Path(hass.config.path("www", "vmc_control", "vmc-control-card.js")).is_file()
+    client = await hass_client()
+    resp = await client.get("/vmc_control/vmc-control-card.js")
+    assert resp.status == 200
+    items = [r for r in hass.data[LOVELACE_DATA].resources.async_items() if "vmc-control-card" in r["url"]]
+    assert len(items) == 1 and items[0]["url"] == url
