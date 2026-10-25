@@ -7,6 +7,11 @@
  *   title: VMC                     # facultatif
  */
 
+// Toute valeur dynamique (titre, états, noms, identifiants) passe par esc()
+// avant d'être insérée dans innerHTML.
+const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ESCAPES[c]);
+
 const FR = {
   running: "En marche", stopped: "Arrêtée", unavailable: "Indisponible",
   auto: "Auto", on: "Marche", off: "Arrêt",
@@ -101,7 +106,7 @@ class VmcControlCard extends HTMLElement {
     const root = this.shadowRoot;
     const status = this._st(this._config.entity);
     if (!status || !status.attributes.entities) {
-      root.innerHTML = `<ha-card><div class="warn">${FR.notFound}</div></ha-card>`;
+      root.innerHTML = `<ha-card><div class="warn">${esc(FR.notFound)}</div></ha-card>`;
       return;
     }
     const a = status.attributes;
@@ -120,29 +125,29 @@ class VmcControlCard extends HTMLElement {
     let boostHtml;
     if (a.boost_until) {
       const min = Math.max(0, Math.ceil((new Date(a.boost_until) - Date.now()) / 60000));
-      boostHtml = `<button class="chip on" data-press="${ent.stop_boost}">
-        <ha-icon icon="mdi:fan-remove"></ha-icon>${FR.boost} · ${FR.remaining(min)}</button>`;
+      boostHtml = `<button class="chip on" data-press="${esc(ent.stop_boost)}">
+        <ha-icon icon="mdi:fan-remove"></ha-icon>${esc(FR.boost)} · ${esc(FR.remaining(min))}</button>`;
     } else {
-      boostHtml = `<button class="chip" data-press="${ent.boost}">
-        <ha-icon icon="mdi:fan-plus"></ha-icon>${FR.boost} ${this._fmt(s.boost_duration, " min", 0)}</button>`;
+      boostHtml = `<button class="chip" data-press="${esc(ent.boost)}">
+        <ha-icon icon="mdi:fan-plus"></ha-icon>${esc(FR.boost)} ${esc(this._fmt(s.boost_duration, " min", 0))}</button>`;
     }
 
     const seg = (entityId, current, options) => `<div class="seg">${options
       .map(([v, label]) => `<button class="${current === v ? "sel" : ""}"
-          data-select="${entityId}" data-option="${v}">${label}</button>`)
+          data-select="${esc(entityId)}" data-option="${esc(v)}">${esc(label)}</button>`)
       .join("")}</div>`;
 
     const toggle = (key) => {
       const id = ent[key];
       const on = this._st(id) && this._st(id).state === "on";
-      return `<ha-switch data-toggle="${id}" ${on ? "checked" : ""}></ha-switch>`;
+      return `<ha-switch data-toggle="${esc(id)}" ${on ? "checked" : ""}></ha-switch>`;
     };
 
     const row = (icon, label, detail, active, control) => `
       <div class="row ${active ? "active" : ""}">
-        <ha-icon icon="${icon}"></ha-icon>
-        <div class="txt"><div class="label">${label}</div><div class="detail">${detail}</div></div>
-        ${control}
+        <ha-icon icon="${esc(icon)}"></ha-icon>
+        <div class="txt"><div class="label">${esc(label)}</div><div class="detail">${esc(detail)}</div></div>
+        ${control /* HTML built above from escaped values */}
       </div>`;
 
     const rows = [];
@@ -171,15 +176,15 @@ class VmcControlCard extends HTMLElement {
       if (group === "toilet" && !a.light_entity) return "";
       if (group === "humidity" && !a.humidity_entity) return "";
       if (group === "thermal" && !(a.temp_inside_entity && a.temp_outside_entity)) return "";
-      return `<div class="pgroup"><div class="ptitle"><ha-icon icon="${icon}"></ha-icon>${FR[group]}</div>
+      return `<div class="pgroup"><div class="ptitle"><ha-icon icon="${esc(icon)}"></ha-icon>${esc(FR[group])}</div>
         ${keys.map((k) => {
           const st = this._st(ent[k]);
           if (!st) return "";
           const at = st.attributes;
-          return `<label class="param"><span>${FR.params[k]}</span>
-            <span class="inp"><input type="number" data-number="${ent[k]}"
-              min="${at.min}" max="${at.max}" step="${at.step}" value="${st.state}">
-            <em>${at.unit_of_measurement || ""}</em></span></label>`;
+          return `<label class="param"><span>${esc(FR.params[k])}</span>
+            <span class="inp"><input type="number" data-number="${esc(ent[k])}"
+              min="${esc(at.min)}" max="${esc(at.max)}" step="${esc(at.step)}" value="${esc(st.state)}">
+            <em>${esc(at.unit_of_measurement)}</em></span></label>`;
         }).join("")}</div>`;
     }).join("");
 
@@ -189,8 +194,8 @@ class VmcControlCard extends HTMLElement {
         <div class="head">
           <div class="fan ${vmcOn ? "spin" : ""}"><ha-icon icon="mdi:fan"></ha-icon></div>
           <div class="txt">
-            <div class="title">${this._config.title || "VMC"}</div>
-            <div class="detail">${statusLine}</div>
+            <div class="title">${esc(this._config.title || "VMC")}</div>
+            <div class="detail">${esc(statusLine)}</div>
           </div>
         </div>
         <div class="controls">
@@ -198,11 +203,11 @@ class VmcControlCard extends HTMLElement {
           ${boostHtml}
         </div>
         <div class="section ${mode !== "auto" ? "dim" : ""}">
-          <div class="stitle">${FR.triggers}</div>
+          <div class="stitle">${esc(FR.triggers)}</div>
           ${rows.join("")}
         </div>
         <details ${this._open ? "open" : ""}>
-          <summary>${FR.settings}</summary>
+          <summary>${esc(FR.settings)}</summary>
           <div class="params">${params}</div>
         </details>
       </ha-card>`;

@@ -33,32 +33,26 @@ type VmcConfigEntry = ConfigEntry[VmcController]
 _LOGGER = logging.getLogger(__name__)
 
 CARD_FILE = Path(__file__).parent / "frontend" / "vmc-control-card.js"
-# Copie servie par la route /local de Home Assistant, disponible dès la première
-# seconde du démarrage. Notre propre route n'existe qu'une fois l'intégration
-# chargée : un tableau de bord ouvert entre-temps garde l'import en échec jusqu'à
-# un rechargement complet (« Custom element doesn't exist »).
-LOCAL_SUBDIR = DOMAIN
-LOCAL_URL = f"/local/{LOCAL_SUBDIR}/{CARD_FILE.name}"
+# La v2.2.x copiait la carte dans config/www et la chargeait via /local.
+# Conservé uniquement pour migrer ces ressources et supprimer la copie.
+LEGACY_LOCAL_SUBDIR = DOMAIN
+LEGACY_LOCAL_URL = f"/local/{LEGACY_LOCAL_SUBDIR}/{CARD_FILE.name}"
 
 
-def _copy_card_to_www(www: str) -> bool:
-    """Copie la carte dans config/www ; True si /local sert déjà ce dossier.
+def _remove_legacy_www_copy(www: str) -> None:
+    """Supprime la copie de la carte écrite dans config/www par la v2.2.x.
 
-    Home Assistant n'enregistre /local que si config/www existe au démarrage : au
-    tout premier lancement on garde notre route jusqu'au redémarrage suivant.
+    Seul le fichier écrit par l'intégration est supprimé, et son dossier s'il est vide.
     """
-    www_path = Path(www)
-    served = www_path.is_dir()
-    target = www_path / LOCAL_SUBDIR / CARD_FILE.name
+    folder = Path(www) / LEGACY_LOCAL_SUBDIR
+    target = folder / CARD_FILE.name
     try:
-        source = CARD_FILE.read_bytes()
-        if not target.is_file() or target.read_bytes() != source:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(source)
+        if target.is_file() and b"vmc-control-card" in target.read_bytes():
+            target.unlink()
+        if folder.is_dir() and not any(folder.iterdir()):
+            folder.rmdir()
     except OSError as err:
-        _LOGGER.warning("Copie de la carte impossible vers %s : %s", target, err)
-        return False
-    return served
+        _LOGGER.debug("Suppression de l'ancienne copie %s impossible : %s", target, err)
 
 
 async def _async_ensure_dashboard_resource(hass: HomeAssistant, url: str) -> None:
@@ -73,7 +67,7 @@ async def _async_ensure_dashboard_resource(hass: HomeAssistant, url: str) -> Non
         if not resources.loaded:
             await resources.async_load()
             resources.loaded = True
-        ours = {CARD_URL, LOCAL_URL}
+        ours = {CARD_URL, LEGACY_LOCAL_URL}
         matches = [
             r for r in resources.async_items() if str(r.get("url", "")).split("?")[0] in ours
         ]
@@ -90,17 +84,15 @@ async def _async_ensure_dashboard_resource(hass: HomeAssistant, url: str) -> Non
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Sert la carte Lovelace et l'ajoute automatiquement au frontend."""
+    """Sert la carte Lovelace depuis l'intégration et l'ajoute aux tableaux de bord."""
     if hass.http is None:
         return True
     await hass.http.async_register_static_paths(
         [StaticPathConfig(CARD_URL, str(CARD_FILE), False)]
     )
-    local_ready = await hass.async_add_executor_job(
-        _copy_card_to_www, hass.config.path("www")
-    )
-    url = f"{LOCAL_URL if local_ready else CARD_URL}?v={VERSION}"
+    url = f"{CARD_URL}?v={VERSION}"
     add_extra_js_url(hass, url)
+    await hass.async_add_executor_job(_remove_legacy_www_copy, hass.config.path("www"))
 
     async def _resource(_event: Event | None = None) -> None:
         await _async_ensure_dashboard_resource(hass, url)

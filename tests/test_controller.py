@@ -211,21 +211,30 @@ async def test_inverted_logic(hass):
 
 
 async def test_card_served_and_resource(hass, hass_client):
-    """La carte est copiée dans www, servie et ajoutée aux ressources."""
+    """La carte est servie par l'intégration ; l'ancienne copie www est migrée et supprimée."""
     from pathlib import Path
 
     from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
     from homeassistant.components.lovelace.const import LOVELACE_DATA
 
+    legacy = Path(hass.config.path("www", "vmc_control", "vmc-control-card.js"))
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text("/* ancienne copie vmc-control-card */")
     assert await async_setup_component(hass, "frontend", {})
     assert await async_setup_component(hass, "lovelace", {})
+    resources = hass.data[LOVELACE_DATA].resources
+    await resources.async_load()
+    resources.loaded = True
+    await resources.async_create_item(
+        {"res_type": "module", "url": "/local/vmc_control/vmc-control-card.js?v=2.2.1"}
+    )
     assert await async_setup_component(hass, "vmc_control", {})
     await hass.async_block_till_done(wait_background_tasks=True)
 
     urls = hass.data[DATA_EXTRA_MODULE_URL].urls
     url = next(u for u in urls if "vmc-control-card.js" in u)
-    assert url.endswith("?v=2.2.0")
-    assert Path(hass.config.path("www", "vmc_control", "vmc-control-card.js")).is_file()
+    assert url == "/vmc_control/vmc-control-card.js?v=2.3.0"
+    assert not legacy.exists() and not legacy.parent.exists()
     client = await hass_client()
     resp = await client.get("/vmc_control/vmc-control-card.js")
     assert resp.status == 200
